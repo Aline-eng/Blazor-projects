@@ -1,0 +1,147 @@
+@page "/tasks"
+@page "/tasks/{filter?}"
+@using TaskManager.Models
+@using TaskManager.Services
+@using Microsoft.AspNetCore.Components
+@rendermode InteractiveServer
+@inject ITaskService TaskService
+@inject NavigationManager NavigationManager
+
+<h3>My Tasks</h3>
+
+<div class="mb-3">
+    <button class="btn btn-primary" @onclick="ShowAddTask">Add New Task</button>
+</div>
+
+<!-- Task filters -->
+<div class="btn-group mb-3">
+    <button class="btn @(currentFilter == "all" ? "btn-primary" : "btn-outline-primary")" 
+            @onclick='() => FilterTasks(filter: "all")'>All</button>
+    <button class="btn @(currentFilter == "active" ? "btn-primary" : "btn-outline-primary")" 
+            @onclick='() => FilterTasks(filter: "active")'>Active</button>
+    <button class="btn @(currentFilter == "completed" ? "btn-primary" : "btn-outline-primary")" 
+            @onclick='() => FilterTasks(filter: "completed")'>Completed</button>
+</div>
+
+@if (showTaskForm)
+{
+    <EditTask TaskItem="currentTask" OnSave="SaveTask" OnCancel="CancelEdit" />
+}
+
+<!-- Tasks List -->
+@if (filteredTasks.Any())
+{
+    @foreach (var task in filteredTasks)
+    {
+        <TaskItemDisplay TaskItem="task" 
+                        OnEdit="EditTask" 
+                        OnDelete="DeleteTask"
+                        OnToggleComplete="ToggleComplete" />
+    }
+}
+else
+{
+    <p>No tasks found.</p>
+}
+
+@code {
+    private List<TaskItem> tasks = new();
+    private List<TaskItem> filteredTasks = new();
+    private TaskItem currentTask = new();
+    private bool showTaskForm = false;
+    private string currentFilter = "all";
+
+    [Parameter]
+    public string? Filter { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!string.IsNullOrEmpty(Filter))
+        {
+            currentFilter = Filter.ToLower();
+        }
+        await RefreshTasks();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrEmpty(Filter))
+        {
+            currentFilter = Filter.ToLower();
+            await RefreshTasks();
+        }
+    }
+
+    private void FilterTasks(string filter)
+    {
+        currentFilter = filter;
+        filteredTasks = filter switch
+        {
+            "active" => tasks.Where(t => !t.IsCompleted).ToList(),
+            "completed" => tasks.Where(t => t.IsCompleted).ToList(),
+            _ => tasks
+        };
+        StateHasChanged();
+    }
+
+    private void ShowAddTask()
+    {
+        currentTask = new TaskItem();
+        showTaskForm = true;
+    }
+
+    private void EditTask(TaskItem task)
+    {
+        currentTask = new TaskItem 
+        { 
+            Id = task.Id,
+            Title = task.Title,
+            Description = task.Description,
+            IsCompleted = task.IsCompleted,
+            Priority = task.Priority,
+            DueDate = task.DueDate
+        };
+        showTaskForm = true;
+    }
+
+    private async Task SaveTask(TaskItem task)
+    {
+        if (task.Id == 0)
+        {
+            await TaskService.AddTaskAsync(task);
+        }
+        else
+        {
+            await TaskService.UpdateTaskAsync(task);
+        }
+        
+        await RefreshTasks();
+        showTaskForm = false;
+        StateHasChanged();
+    }
+
+    private void CancelEdit()
+    {
+        showTaskForm = false;
+    }
+
+    private async Task DeleteTask(int taskId)
+    {
+        await TaskService.DeleteTaskAsync(taskId);
+        await RefreshTasks();
+    }
+
+    private async Task RefreshTasks()
+    {
+        tasks = await TaskService.GetTasksAsync();
+        FilterTasks(currentFilter);
+        StateHasChanged();
+    }
+
+    private async Task ToggleComplete(TaskItem task)
+    {
+        task.IsCompleted = !task.IsCompleted;
+        await TaskService.UpdateTaskAsync(task);
+        await RefreshTasks();
+    }
+}

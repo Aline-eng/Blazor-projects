@@ -1,0 +1,77 @@
+@using TaskManager.Models
+@using System.ComponentModel.DataAnnotations
+@rendermode InteractiveServer
+
+<div class="card mb-3">
+    <div class="card-header">
+        <h5>@(TaskItem.Id == 0 ? "Add New Task" : "Edit Task")</h5>
+    </div>
+    <div class="card-body">
+        <EditForm Model="TaskItem" OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <div class="mb-3">
+                <label for="title" class="form-label">Title *</label>
+                <InputText id="title" @bind-Value="TaskItem.Title" class="form-control" />
+                <ValidationMessage For="@(() => TaskItem.Title)" />
+            </div>
+
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <InputTextArea id="description" @bind-Value="TaskItem.Description" class="form-control" />
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="priority" class="form-label">Priority</label>
+                        <InputSelect id="priority" @bind-Value="TaskItem.Priority" class="form-select">
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                        </InputSelect>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="dueDate" class="form-label">Due Date</label>
+                        <InputDate id="dueDate" @bind-Value="TaskItem.DueDate" class="form-control" />
+                    </div>
+                </div>
+            </div>
+
+            @if (TaskItem.Id != 0)
+            {
+                <div class="mb-3 form-check">
+                    <InputCheckbox id="isCompleted" @bind-Value="TaskItem.IsCompleted" class="form-check-input" />
+                    <label for="isCompleted" class="form-check-label">Completed</label>
+                </div>
+            }
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success">Save</button>
+                <button type="button" class="btn btn-secondary" @onclick="Cancel">Cancel</button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public TaskItem TaskItem { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<TaskItem> OnSave { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    private async Task HandleValidSubmit()
+    {
+        await OnSave.InvokeAsync(TaskItem);
+    }
+
+    private void Cancel()
+    {
+        OnCancel.InvokeAsync();
+    }
+}

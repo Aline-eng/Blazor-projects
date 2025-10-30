@@ -1,0 +1,38 @@
+﻿<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">
+            <i class="bi bi-check2-square"></i> TaskManager
+        </a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <nav class="nav flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link d-flex align-items-center" href="" Match="NavLinkMatch.All">
+                <i class="bi bi-house-door-fill"></i>
+                <span>Dashboard</span>
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link d-flex align-items-center" href="tasks">
+                <i class="bi bi-list-check"></i>
+                <span>All Tasks</span>
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link d-flex align-items-center" href="tasks/active">
+                <i class="bi bi-clock-history"></i>
+                <span>Active Tasks</span>
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link d-flex align-items-center" href="tasks/completed">
+                <i class="bi bi-check2-all"></i>
+                <span>Completed</span>
+            </NavLink>
+        </div>
+    </nav>
+</div>
